@@ -90,50 +90,49 @@ const grid = document.getElementById("grid");
 const timeEl = document.getElementById("time");
 const dateEl = document.getElementById("currentDate");
 
-const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+// YYYY-MM-DD (same for all devices)
+const today = new Date().toISOString().slice(0,10);
 
-// ✅ UPDATED LOGIC: 0–9 guaranteed in 16 numbers
+// 🔑 Seeded random (deterministic)
+function seededRandom(seed){
+    let x = Math.sin(seed) * 10000;
+    return x - Math.floor(x);
+}
+
+// ✅ Same numbers on all devices
 function generateNumbers(){
     let nums = [];
 
-    // Add 0–9 once
+    // Convert date to numeric seed
+    let seed = Number(today.replaceAll("-", ""));
+
+    // Ensure 0–9 present
     for(let i = 0; i <= 9; i++){
         nums.push(i);
     }
 
-    // Add remaining 6 random numbers
+    // Add remaining 6 numbers (seed based)
     for(let i = 0; i < 6; i++){
-        nums.push(Math.floor(Math.random() * 10));
+        seed++;
+        nums.push(Math.floor(seededRandom(seed) * 10));
     }
 
-    // Shuffle numbers
+    // Shuffle (seed based)
     for(let i = nums.length - 1; i > 0; i--){
-        const j = Math.floor(Math.random() * (i + 1));
+        seed++;
+        const j = Math.floor(seededRandom(seed) * (i + 1));
         [nums[i], nums[j]] = [nums[j], nums[i]];
     }
 
-    localStorage.setItem("dailyNumbers", JSON.stringify(nums));
-    localStorage.setItem("dailyDate", today);
     return nums;
-}
-
-function loadNumbers(){
-    let savedDate = localStorage.getItem("dailyDate");
-    let nums = localStorage.getItem("dailyNumbers");
-
-    if(savedDate === today && nums){
-        return JSON.parse(nums);
-    }else{
-        return generateNumbers();
-    }
 }
 
 function renderGrid(numbers){
     grid.innerHTML="";
     numbers.forEach(n=>{
-        const div=document.createElement("div");
-        div.className="box";
-        div.innerText=n;
+        const div = document.createElement("div");
+        div.className = "box";
+        div.innerText = n;
         grid.appendChild(div);
     });
 }
@@ -153,24 +152,22 @@ function updateTimer(){
     timeEl.innerText = `${h}:${m}:${s}`;
 
     if(diff <= 0){
-        localStorage.removeItem("dailyNumbers");
-        localStorage.removeItem("dailyDate");
         location.reload();
     }
 }
 
-const numbers = loadNumbers();
+// Run
+const numbers = generateNumbers();
 renderGrid(numbers);
 setInterval(updateTimer,1000);
 updateTimer();
 
-// Show current date
-const todayDate = new Date();
-const day = String(todayDate.getDate()).padStart(2, "0");
-const month = String(todayDate.getMonth() + 1).padStart(2, "0");
-const year = todayDate.getFullYear();
-
-dateEl.innerText = `${day}/${month}/${year}`;
+// Show date
+const d = new Date();
+dateEl.innerText =
+    String(d.getDate()).padStart(2,"0") + "/" +
+    String(d.getMonth()+1).padStart(2,"0") + "/" +
+    d.getFullYear();
 </script>
 
 </body>
