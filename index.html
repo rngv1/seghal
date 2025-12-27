@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ginni Seghal RNG v1</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family: Arial, sans-serif;
+}
+
+body{
+    height:100vh;
+    background:url("background.jpg") no-repeat center center/cover;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    color:#fff;
+}
+
+.container{
+    text-align:center;
+}
+
+h1{
+    letter-spacing:4px;
+}
+
+h2{
+    margin:15px 0;
+    letter-spacing:3px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:repeat(4,70px);
+    gap:10px;
+    justify-content:center;
+    margin:20px 0;
+}
+
+.box{
+    width:70px;
+    height:70px;
+    background:#f2f2f2;
+    color:#555;
+    font-size:28px;
+    font-weight:bold;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    border-radius:6px;
+}
+
+.timer{
+    margin-top:20px;
+    letter-spacing:3px;
+    font-size:18px;
+}
+
+#currentDate{
+    margin-top:8px;
+    font-size:14px;
+    letter-spacing:2px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>GINNI SEGHAL</h1>
+    <h1>RNG V1</h1>
+
+    <h2>TODAY'S NUMBER</h2>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="timer">
+        NEXT NUMBER IN <span id="time">00:00:00</span>
+        <div id="currentDate"></div>
+    </div>
+</div>
+
+<script>
+const grid = document.getElementById("grid");
+const timeEl = document.getElementById("time");
+const dateEl = document.getElementById("currentDate");
+
+const today = new Date().toISOString().slice(0,10); // YYYY-MM-DD
+
+// ✅ UPDATED LOGIC: 0–9 guaranteed in 16 numbers
+function generateNumbers(){
+    let nums = [];
+
+    // Add 0–9 once
+    for(let i = 0; i <= 9; i++){
+        nums.push(i);
+    }
+
+    // Add remaining 6 random numbers
+    for(let i = 0; i < 6; i++){
+        nums.push(Math.floor(Math.random() * 10));
+    }
+
+    // Shuffle numbers
+    for(let i = nums.length - 1; i > 0; i--){
+        const j = Math.floor(Math.random() * (i + 1));
+        [nums[i], nums[j]] = [nums[j], nums[i]];
+    }
+
+    localStorage.setItem("dailyNumbers", JSON.stringify(nums));
+    localStorage.setItem("dailyDate", today);
+    return nums;
+}
+
+function loadNumbers(){
+    let savedDate = localStorage.getItem("dailyDate");
+    let nums = localStorage.getItem("dailyNumbers");
+
+    if(savedDate === today && nums){
+        return JSON.parse(nums);
+    }else{
+        return generateNumbers();
+    }
+}
+
+function renderGrid(numbers){
+    grid.innerHTML="";
+    numbers.forEach(n=>{
+        const div=document.createElement("div");
+        div.className="box";
+        div.innerText=n;
+        grid.appendChild(div);
+    });
+}
+
+// Countdown till midnight
+function updateTimer(){
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24,0,0,0);
+
+    const diff = midnight - now;
+
+    const h = String(Math.floor(diff/3600000)).padStart(2,"0");
+    const m = String(Math.floor((diff%3600000)/60000)).padStart(2,"0");
+    const s = String(Math.floor((diff%60000)/1000)).padStart(2,"0");
+
+    timeEl.innerText = `${h}:${m}:${s}`;
+
+    if(diff <= 0){
+        localStorage.removeItem("dailyNumbers");
+        localStorage.removeItem("dailyDate");
+        location.reload();
+    }
+}
+
+const numbers = loadNumbers();
+renderGrid(numbers);
+setInterval(updateTimer,1000);
+updateTimer();
+
+// Show current date
+const todayDate = new Date();
+const day = String(todayDate.getDate()).padStart(2, "0");
+const month = String(todayDate.getMonth() + 1).padStart(2, "0");
+const year = todayDate.getFullYear();
+
+dateEl.innerText = `${day}/${month}/${year}`;
+</script>
+
+</body>
+</html>
