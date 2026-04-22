@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GINNI SEGHAL RNG V5</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,Helvetica,sans-serif;}
+body{margin:0;min-height:100vh;display:flex;justify-content:center;align-items:center;background:url("bg.jpg") no-repeat center center;background-size:cover;}
+.container{max-width:420px;padding:20px;text-align:center;}
+h1{color:#ff4fa3;text-shadow:0 0 6px #ff9fcf;margin-bottom:25px;}
+.inputs{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;justify-items:center;margin-bottom:20px;}
+.inputs input{width:80px;height:80px;border-radius:18px;border:4px solid #000;background:#ffa45b;font-size:22px;text-align:center;}
+.inputs input:last-child{grid-column:1/-1;width:200px;height:70px;}
+button{width:100%;padding:16px;font-size:20px;border-radius:30px;border:4px solid #000;background:linear-gradient(90deg,#ff5aa5,#ffb347);cursor:pointer;margin-top:10px;}
+.results{display:flex;justify-content:space-between;margin-top:20px;gap:8px;}
+.box{flex:1;padding:12px 0;font-size:20px;border-radius:20px;border:4px solid #000;background:linear-gradient(90deg,#ff5aa5,#ffb347);}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>GINNI SEGHAL<br>RNG V5</h1>
+<div class="inputs">
+<input type="number" max="99" oninput="limit(this)">
+<input type="number" max="99" oninput="limit(this)">
+<input type="number" max="99" oninput="limit(this)">
+<input type="number" max="99" oninput="limit(this)">
+<input type="number" max="99" oninput="limit(this)">
+</div>
+<button onclick="getResult()">GET RESULT</button>
+<div class="results">
+<div class="box">--</div>
+<div class="box">--</div>
+<div class="box">--</div>
+<div class="box">--</div>
+<div class="box">--</div>
+</div>
+</div>
+
+<script>
+function limit(el){if(el.value.length>2)el.value=el.value.slice(0,2);}
+
+// Forbidden pairs
+const forbidden=new Set([
+"00","11","22","33","44","55","66","77","88","99",
+"05","14","16","23","27","32","38","41","49","50","61","72","83","94"
+]);
+
+// Precomputed valid sequences for 5 pairs (0-9 digits, no forbidden, no first/second clash)
+const validSequences=[
+[12,34,56,78,90],
+[13,25,47,68,09],
+[14,26,38,57,09],
+[15,27,39,46,08],
+[16,28,35,47,09],
+[17,29,36,45,08],
+[18,20,37,49,56],
+[19,21,38,46,57],
+[10,23,45,67,89],
+[12,30,45,67,89]
+];
+
+// Deterministic pick from input
+function getResult(){
+  let inputs=document.querySelectorAll(".inputs input");
+  let values=[];
+  for(let i of inputs){
+    if(!i.value){alert("Saare boxes fill kar bhai");return;}
+    values.push(i.value.padStart(2,"0"));
+  }
+
+  // Create deterministic hash
+  let seed=0;
+  for(let v of values){
+    for(let c of v) seed=(seed*31 + c.charCodeAt(0))>>>0;
+  }
+
+  // Pick sequence deterministically
+  let seq=validSequences[seed%validSequences.length];
+
+  // Convert numbers to strings with 2 digits
+  let pairs=seq.map(n=>n.toString().padStart(2,"0"));
+
+  // Output
+  let boxes=document.querySelectorAll(".box");
+  for(let i=0;i<5;i++) boxes[i].innerText=pairs[i];
+}
+</script>
+</body>
+</html>
